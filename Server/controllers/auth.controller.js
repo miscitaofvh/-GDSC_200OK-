@@ -41,23 +41,23 @@ exports.register = async (req, res) => {
 
 
 exports.login = async (req, res) => {
-    const { Identifier, Password } = req.body;
-    if (!Identifier || !Password) return res.status(400).json({ error: "Missing login info" });
+    const { identifier, password } = req.body;
+    if (!identifier || !password) return res.status(400).json({ error: "Missing login info" });
 
     const userCollection = getDB().collection('user');
     const user = await userCollection.findOne({
-        $or: [{ Username: Identifier }, { Email: Identifier }]
+        $or: [{ username: identifier }, { email: identifier }]
     });
 
-    if (user && await bcrypt.compare(Password, user.Password)) {
+    if (user && await bcrypt.compare(password, user.password)) {
         req.session.user_id = user._id.toString();
-        req.session.username = user.Username;
+        req.session.username = user.username;
 
         return res.status(200).json({
             message: "Login successful!",
-            username: user.Username,
+            username: user.username,
             user_id: user._id.toString(),
-            email: user.Email,
+            email: user.email,
         });
     }
 

@@ -7,14 +7,14 @@ export async function login(identifier: string, password: string) {
         const response = await requestAPI(BASE_URL, "/login", "POST", { identifier, password });
         const { data, status } = response;
 
-        if (status === 200 && data.success) {
-            localStorage.setItem("token", data.token); // check it later
+        if (status === 200) {
             return { 
                 success: true, 
                 message: data.message || "Login successful!",
                 data: data
             };
         } else {
+            console.log(response);
             return { 
                 success: false, 
                 message: data.errors[0].msg || "Login failed",
@@ -35,7 +35,7 @@ export async function register(username: string, email: string, name: string, pa
         const response = await requestAPI(BASE_URL, "/register", "POST", { username, email, name, password });
         const { data, status } = response;
 
-        if (status === 201 && data.success) {
+        if (status === 201) {
             return { 
                 success: true, 
                 message: data.message || "Registration successful!",
