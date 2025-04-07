@@ -1,12 +1,12 @@
 const { MongoClient } = require('mongodb');
 
-const client = new MongoClient(process.env.MONGO_URI, { useUnifiedTopology: true });
+const client = new MongoClient(process.env.MONGO_URI);
 
 let db;
 
 async function connectDB() {
     await client.connect();
-    db = client.db('DOAN_NT106');
+    db = client.db('200OK');
     console.log('✅ MongoDB connected');
 }
 
