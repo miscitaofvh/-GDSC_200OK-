@@ -2,6 +2,40 @@ const { getDB } = require('../utils/db');
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
 
+
+exports.register = async (req, res) => {
+    const { Username, Email, Password, Name } = req.body;
+    const db = require('../utils/db').getDB();
+    const userCollection = db.collection('user');
+    const bcrypt = require('bcrypt');
+
+    try {
+        const existingUser = await userCollection.findOne({
+            $or: [{ Username }, { Email }]
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ error: "Username or Email already exists." });
+        }
+
+        const hashedPassword = await bcrypt.hash(Password, 10);
+        await userCollection.insertOne({
+            Username,
+            Email,
+            Password: hashedPassword,
+            Name,
+            role: 'user',
+            CreateDate: new Date()
+        });
+
+        return res.status(201).json({ message: "User registered successfully!" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+
 exports.login = async (req, res) => {
     const { Identifier, Password } = req.body;
     if (!Identifier || !Password) return res.status(400).json({ error: "Missing login info" });
