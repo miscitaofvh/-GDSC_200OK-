@@ -72,7 +72,7 @@ exports.checklogin = (req, res) => {
     if (req.session && req.session.user_id) {
         return res.status(200).json({
             message: "User is logged in",
-            user_id: req.session.user_id,
+            // user_id: req.session.user_id,
             username: req.session.username
         });
     } else {
