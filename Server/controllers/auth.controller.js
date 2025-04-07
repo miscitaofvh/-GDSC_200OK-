@@ -4,28 +4,31 @@ const { ObjectId } = require('mongodb');
 
 
 exports.register = async (req, res) => {
-    const { Username, Email, Password, Name } = req.body;
+    const { username, email, password, name } = req.body;
     const db = require('../utils/db').getDB();
     const userCollection = db.collection('user');
     const bcrypt = require('bcrypt');
 
     try {
         const existingUser = await userCollection.findOne({
-            $or: [{ Username }, { Email }]
+            $or: [{ username }, { email }]
         });
 
         if (existingUser) {
             return res.status(400).json({ error: "Username or Email already exists." });
         }
 
-        const hashedPassword = await bcrypt.hash(Password, 10);
+        // Mã hóa mật khẩu
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Thêm user vào database
         await userCollection.insertOne({
-            Username,
-            Email,
-            Password: hashedPassword,
-            Name,
+            username,
+            email,
+            password: hashedPassword,
+            name,
             role: 'user',
-            CreateDate: new Date()
+            createDate: new Date()
         });
 
         return res.status(201).json({ message: "User registered successfully!" });
@@ -34,6 +37,7 @@ exports.register = async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 };
+
 
 
 exports.login = async (req, res) => {

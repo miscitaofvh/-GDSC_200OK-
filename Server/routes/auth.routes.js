@@ -6,18 +6,18 @@ const { checklogin } = require('../controllers/auth.controller');
 
 // Validate & Register
 router.post('/register', [
-    check('Username')
+    check('username')
         .notEmpty().withMessage('Username is required')
         .matches(/^[A-Za-z0-9_]+$/).withMessage('Username must not contain special characters'),
         
-    check('Email')
-        .isEmail().withMessage('Invalid email')
-        .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).withMessage('Invalid email format'),
-    check('Password')
+    check('email')
+        .isEmail().withMessage('Invalid email'),
+        
+    check('password')
         .notEmpty().withMessage('Password is required')
         .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
 
-    check('Name')
+    check('name')
         .notEmpty().withMessage('Name is required'),
 ], (req, res) => {
     const errors = validationResult(req);
