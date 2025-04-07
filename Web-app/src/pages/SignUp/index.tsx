@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { register } from "../../utils/service/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faLock, faEye, faEyeSlash, faEnvelope } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faLock, faEye, faEyeSlash, faEnvelope, faIdCard } from "@fortawesome/free-solid-svg-icons";
 import { useModal } from "../../contexts/ModalContext";
 import { isUsernameValid, isEmailValid } from "../../utils/validate/identifier";
 import { PasswordStrength, PasswordCheckService } from "../../utils/validate/passwd";
@@ -28,7 +28,7 @@ const validateInput = (name: string, value: string): string => {
 };
 
 const SignUp = () => {
-    const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+    const [formData, setFormData] = useState({ username: "", email: "", name: "", password: "" });
     const [errors, setErrors] = useState({ username: "", email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);
     const { closeModal, openModal } = useModal();
@@ -56,7 +56,7 @@ const SignUp = () => {
 
         if (Object.values(newErrors).some(err => err)) return;
 
-        const response = await register(formData.username, formData.email, formData.password);
+        const response = await register(formData.username, formData.email, formData.name, formData.password);
 
         if (response.success) {
             alert("hehe. Registration successful!");
@@ -106,6 +106,20 @@ const SignUp = () => {
                                 className="w-full h-full pl-[30px] pr-[50px] rounded-[25px] border-none outline-none text-[14px] bg-white text-[#595959]"
                             />
                             {errors.email && <small className="text-red-500 text-[12px] block">{errors.email}</small>}
+                        </div>
+                        <div className="flex flex-col relative items-center w-full h-[50px] mt-[10px]">
+                            <span className="absolute left-0 text-[#666] w-[50px] leading-[50px]">
+                                <FontAwesomeIcon icon={faIdCard} className="text-[18px]" />
+                            </span>
+                            <input
+                                type="text"
+                                name="name"
+                                placeholder="Your Name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                                className="w-full h-full pl-[30px] pr-[50px] rounded-[25px] border-none outline-none text-[14px] bg-white text-[#595959]"
+                            />
                         </div>
                         <div className="flex flex-col relative items-center w-full h-[50px] mt-[10px]">
                             <span className="absolute left-0 text-[#666] w-[50px] leading-[50px]">

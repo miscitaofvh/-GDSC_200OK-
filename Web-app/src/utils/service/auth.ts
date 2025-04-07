@@ -30,9 +30,9 @@ export async function login(identifier: string, password: string) {
     }
 }
 
-export async function register(username: string, email: string, password: string) {
+export async function register(username: string, email: string, name: string, password: string) {
     try {
-        const response = await requestAPI(BASE_URL, "/register", "POST", { username, email, password });
+        const response = await requestAPI(BASE_URL, "/register", "POST", { username, email, name, password });
         const { data, status } = response;
 
         if (status === 201 && data.success) {
