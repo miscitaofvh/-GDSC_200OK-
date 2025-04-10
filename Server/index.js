@@ -28,6 +28,7 @@ app.use(session({
 
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/user', require('./routes/user.routes'));
+app.use('/api/app', require('./routes/app.routes'));
 
 connectDB().then(() => {
     app.listen(3000, () => console.log("Server running at http://localhost:3000"));
