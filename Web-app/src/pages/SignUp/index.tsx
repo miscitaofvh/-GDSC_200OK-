@@ -60,8 +60,7 @@ const SignUp = () => {
         const response = await register(formData.username, formData.email, formData.name, formData.password);
 
         if (response.success) {
-            alert("hehe. Registration successful!");
-            closeModal();
+            openModal("login");
         } else {
             alert(response.message);
         }
