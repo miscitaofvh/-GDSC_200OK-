@@ -83,3 +83,9 @@ exports.checklogin = (req, res) => {
         return res.status(401).json({ error: "Not logged in" });
     }
 };
+
+exports.authMe = async (req, res) => {
+    return res.json({
+        user: req.session.username,
+    });
+}

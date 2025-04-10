@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { login } from "../../utils/service/auth";
 import Image from "../../assets/auth_pic.jpg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faLock, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { useModal } from "../../contexts/ModalContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Login: React.FC = () => {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({ identifier: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const { closeModal, openModal } = useModal();

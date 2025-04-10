@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { register } from "../../utils/service/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faLock, faEye, faEyeSlash, faEnvelope, faIdCard } from "@fortawesome/free-solid-svg-icons";
 import { useModal } from "../../contexts/ModalContext";
 import { isUsernameValid, isEmailValid } from "../../utils/validate/identifier";
 import { PasswordStrength, PasswordCheckService } from "../../utils/validate/passwd";
 import Image from "../../assets/auth_pic.jpg";
+import { useAuth } from "../../contexts/AuthContext";
 
 const validateInput = (name: string, value: string): string => {
     if (name === "username") {
@@ -28,6 +28,7 @@ const validateInput = (name: string, value: string): string => {
 };
 
 const SignUp = () => {
+    const { register } = useAuth();
     const [formData, setFormData] = useState({ username: "", email: "", name: "", password: "" });
     const [errors, setErrors] = useState({ username: "", email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);

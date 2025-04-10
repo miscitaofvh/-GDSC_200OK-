@@ -40,7 +40,7 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         <ModalContext.Provider value={{ openModal: setModalType, closeModal: () => setModalType(null) }}>
             {children}
             {modalType && (
-                <Overlay onClick={() => setModalType(null)}>
+                <Overlay>
                     <ModalContent onClick={(e) => e.stopPropagation()}>
                         {modalType === "sign-up" && <SignUp />}
                         {modalType === "login" && <Login />}

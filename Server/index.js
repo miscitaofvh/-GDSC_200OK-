@@ -23,7 +23,7 @@ app.use(session({
     store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
     resave: false,
     saveUninitialized: true,
-    cookie: { httpOnly: true, sameSite: 'strict' }
+    cookie: { httpOnly: true, sameSite: 'strict', maxAge: 1000 * 60 * 60 * 24 * 7 }
 }));
 
 app.use('/api/auth', require('./routes/auth.routes'));
