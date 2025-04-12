@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import axios from "axios";
 import { requestAPI } from "../utils/request";
 
 const BASE_URL = "http://localhost:3000/api/auth";
@@ -47,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const { data, status } = response;
             if (status === 200) {
                 setUser(data.user);
+                window.location.reload();
                 return {
                     success: true,
                     message: data.message || "Login successful!",
@@ -88,9 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const logout = async () => {
         try {
-            await axios.post(`${BASE_URL}/api/logout`, {}, {
-                withCredentials: true,
-            });
+            await requestAPI(BASE_URL, "/logout", "POST");
         } catch (err) {
             console.error("Logout failed:", err);
         } finally {

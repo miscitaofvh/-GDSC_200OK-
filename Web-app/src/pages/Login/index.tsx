@@ -22,7 +22,6 @@ const Login: React.FC = () => {
     try {
       const response = await login(formData.identifier, formData.password);
       if (response.success) {
-        alert("Login successful. Hehehe!");
         closeModal();
       } else {
         alert(response.message || "Login failed.");

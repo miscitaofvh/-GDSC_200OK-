@@ -32,7 +32,7 @@ const SignUp = () => {
     const [formData, setFormData] = useState({ username: "", email: "", name: "", password: "" });
     const [errors, setErrors] = useState({ username: "", email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);
-    const { closeModal, openModal } = useModal();
+    const { openModal } = useModal();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -61,6 +61,7 @@ const SignUp = () => {
 
         if (response.success) {
             openModal("login");
+            window.location.reload();
         } else {
             alert(response.message);
         }

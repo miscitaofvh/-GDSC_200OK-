@@ -67,7 +67,12 @@ exports.login = async (req, res) => {
 exports.logout = (req, res) => {
     req.session.destroy((err) => {
         if (err) return res.status(500).json({ error: "Logout failed" });
-        res.clearCookie('connect.sid');
+        res.clearCookie("connect.sid", {
+            path: "/",           
+            httpOnly: true,      
+            sameSite: "strict",     
+            //secure: false  // http only                   
+          });
         return res.status(200).json({ message: "Logged out successfully." });
     });
 };
