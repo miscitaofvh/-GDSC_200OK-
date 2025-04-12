@@ -12,7 +12,7 @@ exports.search = async (req, res) => {
 
     const db = await getDB();
     const searchTerm = req.body.search;
-    const n8nWebhookUrl = process.env.n8nWebhookUrl || "https://hunn.app.n8n.cloud/webhook-test/c28ef86c-f26b-4625-9fe7-4e5987c4dac6";
+    const n8nWebhookUrl = process.env.n8nWebhookUrl || "https://leehugw.app.n8n.cloud/webhook/42743332-d9c4-4072-80b8-6f3550adf172";
 
     const existingDoc = await db.collection("YoutubeData").findOne({
       "data.output.search": { $regex: searchTerm, $options: "i" }
