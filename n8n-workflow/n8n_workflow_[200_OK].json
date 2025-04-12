@@ -1,0 +1,1812 @@
+{
+  "name": "My workflow 7 - copy",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/youtube/v3/search?key=AIzaSyCgf6TF2kdJ6DvYJVHbbg4Uyzm9xwtIKqs&search?part=snippet&q={{ $json.output.search }}&maxResults=15",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -420,
+        240
+      ],
+      "id": "12160ed6-59a7-4233-b20b-7912a7bb2f47",
+      "name": "Get Youtube's Data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        260,
+        0
+      ],
+      "id": "0fe8ee09-c7f9-4ebf-9abc-e6f2ff3ef515",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        220
+      ],
+      "id": "a98b0568-161d-43e6-9f84-0d997b6d8dfd",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        100
+      ],
+      "id": "20245fe3-d689-4c35-8a88-5211cc3315d3",
+      "name": "Format json"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        100
+      ],
+      "id": "7fc9656d-06fe-4d06-84ed-a9672fac412e",
+      "name": "Format json1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "42743332-d9c4-4072-80b8-6f3550adf172",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1220,
+        300
+      ],
+      "id": "db2bd687-3a26-4d98-975c-a7c75749988e",
+      "name": "Webhook",
+      "webhookId": "42743332-d9c4-4072-80b8-6f3550adf172"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[0].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        100
+      ],
+      "id": "67a571d5-dcff-4290-b818-18278f723729",
+      "name": "GET VIDEo"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        400
+      ],
+      "id": "acf73897-05c1-4d98-aa00-dd1231d8d802",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        620
+      ],
+      "id": "dc876371-a457-4689-b0d9-d73a8594ead4",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        500
+      ],
+      "id": "b7d74fbe-2c2f-4dee-ab23-3a57a6d50843",
+      "name": "Format json2"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        500
+      ],
+      "id": "71d9d081-cb8e-4e94-801b-010f3838425b",
+      "name": "Format json3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[1].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        500
+      ],
+      "id": "077866be-de25-4808-85fe-aec24b787b3c",
+      "name": "GET VIDEo2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        800
+      ],
+      "id": "c3fcb912-cd76-4a08-a6e0-0d4a55faa4d0",
+      "name": "AI Agent3"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        1020
+      ],
+      "id": "c8c79966-8b54-42ca-b986-1c4e1fea6687",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        900
+      ],
+      "id": "94d59d38-e372-4c14-9094-0e78c6522c90",
+      "name": "Format json4"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        900
+      ],
+      "id": "9b6afbe1-389d-4a2d-9b2e-c64f43751a19",
+      "name": "Format json5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[2].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        900
+      ],
+      "id": "5fed6fc1-b640-473e-bacb-a260162746d0",
+      "name": "GET VIDEo3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        1200
+      ],
+      "id": "7993cf43-8b38-424f-9ee9-fa7616bdf6eb",
+      "name": "AI Agent4"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        1420
+      ],
+      "id": "0cab3306-9639-4ab0-bfc0-ea26e6022821",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        1300
+      ],
+      "id": "b1f9e3de-1301-455c-a97d-cdbf7f81c336",
+      "name": "Format json6"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        1300
+      ],
+      "id": "d01d1819-a57f-4bbc-9acb-48916a93c039",
+      "name": "Format json7"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[3].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        1300
+      ],
+      "id": "4595a616-e5e8-46c8-b9fc-8530f66536dc",
+      "name": "GET VIDEo4"
+    },
+    {
+      "parameters": {
+        "numberInputs": 10
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        840,
+        1740
+      ],
+      "id": "154f09a8-1403-4ac0-abbf-a4fefb772498",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        460
+      ],
+      "id": "da447e93-e364-4487-a5a9-f5878d362a84",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Từ các đánh giá của 10 video trên youtube được tóm tắt lại như sau: \ntóm tắt: {{ $json.data[1].output.summary }}\nbình luận: {{ $json.data[1].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[1].output.title }}\ncủa kênh {{ $json.data[1].output.channel }}\n\ntóm tắt: {{ $json.data[2].output.summary }}\nbình luận: {{ $json.data[2].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[2].output.title }}\ncủa kênh {{ $json.data[2].output.channel }}\n\ntóm tắt: {{ $json.data[3].output.summary }}\nbình luận: {{ $json.data[3].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[3].output.title }}\ncủa kênh {{ $json.data[3].output.channel }}\n\ntóm tắt: {{ $json.data[4].output.summary }}\nbình luận: {{ $json.data[4].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[4].output.title }}\ncủa kênh {{ $json.data[4].output.channel }}\n\n\ntóm tắt: {{ $json.data[5].output.summary }}\nbình luận: {{ $json.data[5].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[4].output.title }}\ncủa kênh {{ $json.data[4].output.channel }}\n\n\ntóm tắt: {{ $json.data[5].output.summary }}\nbình luận: {{ $json.data[5].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[5].output.title }}\ncủa kênh {{ $json.data[5].output.channel }}\n\n\ntóm tắt: {{ $json.data[5].output.summary }}\nbình luận: {{ $json.data[5].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[5].output.title }}\ncủa kênh {{ $json.data[5].output.channel }}\n\n\ntóm tắt: {{ $json.data[6].output.summary }}\nbình luận: {{ $json.data[6].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[6].output.title }}\ncủa kênh {{ $json.data[6].output.channel }}\n\n\ntóm tắt: {{ $json.data[6].output.summary }}\nbình luận: {{ $json.data[6].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[6].output.title }}\ncủa kênh {{ $json.data[6].output.channel }}\n\n\ntóm tắt: {{ $json.data[7].output.summary }}\nbình luận: {{ $json.data[7].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[7].output.title }}\ncủa kênh {{ $json.data[7].output.channel }}\n\ntóm tắt: {{ $json.data[8].output.summary }}\nbình luận: {{ $json.data[8].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[8].output.title }}\ncủa kênh {{ $json.data[8].output.channel }}\n\ntóm tắt: {{ $json.data[9].output.summary }}\nbình luận: {{ $json.data[9].output.comment }} Giá: {{ $json.data[1].output.price }}{{ $json.data[1].output.currency }}\ntiêu đề: {{ $json.data[9].output.title }}\ncủa kênh {{ $json.data[9].output.channel }}\n\nDựa vào các thông tin đó đưa về thông tin tổng quan nhất về sản phẩm. Nếu có thể hãy dẫn chứng quan điểm của kênh nào.\nTrả kết quả sau dưới dạng JSON hợp lệ, đúng chuẩn JavaScript. KHÔNG ghi thêm văn bản ngoài JSON. tách thành nhiều output khác nhau. nếu có nhiều thông tin của một trường thì gộp lại thành một trường duy nhất. Định dạng json theo chuẩn như sau, không thêm các trường json con, tuyệt đối tuân thủ theo mẫu. Mỗi trường viết liền mạch nhau không được phép xuống hàng \n\nmẫu (viết hoa chữ cái đầu tiên):\n{\n  name: {{ $json.data[0].body.search }}\n  summary: //tóm tắt về nội dung của tất cả video\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu của tất cả video.\n  point: //Điểm số đánh giá độ tích cực với sản phẩm do AI đánh giá thang điểm 5\n  strengths: //chia ra thành các mục (1, 2, 3, 4,...)\n  weaknesses: //chia ra thành các mục (1, 2, 3, 4,...)\n  improvement: //chia ra thành các mục (1, 2, 3, 4,...)\n  appearance: //chia ra thành các mục (1, 2, 3, 4,...)\n  quality: //chia ra thành các mục (1, 2, 3, 4,...)\n  material: //chia ra thành các mục (1, 2, 3, 4,...)\n  price: // giá tiền của sản phẩm sau khi được quy đổi thành việt nam đồng\n  currency: //đơn vị tiền tệ là Việt Nam Đồng\n\n}\n\n\n\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1440,
+        420
+      ],
+      "id": "9c17017b-f28e-40a3-8d6d-83d4179bc052",
+      "name": "AI Agent5"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        720
+      ],
+      "id": "c59f17a6-b47c-466a-95c2-5ade12250538",
+      "name": "Google Gemini Chat Model5",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        460
+      ],
+      "id": "51eff16c-2b83-44c8-a35a-1fef466b3bfb",
+      "name": "Format json8"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1580,
+        220
+      ],
+      "id": "6ce31c74-7f7e-4263-8d67-425ccf95fc26",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "YoutubeData",
+        "fields": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        220
+      ],
+      "id": "1ea73f00-8fe7-4ebc-832d-24e1d86dc83f",
+      "name": "MongoDB",
+      "alwaysOutputData": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "OJ4oVe4Ufu0L0LGc",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là nội dung của người dùng yêu cầu: {{ $json.body.search }}\nxuất ra định dạng json như sau:\n{\n\"search\":{{ $json.body.search }} // trường này giữ nguyên không thay đổi\n\"category\": // hãy cho tôi từ khóa về lĩnh vực của sản phẩm đấy\n}\nchỉ xuất ra chuẩn định dạng của json",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -980,
+        280
+      ],
+      "id": "c9d444d7-3ffc-4022-a6ae-d2b64d6858c9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -980,
+        460
+      ],
+      "id": "38d55bad-9393-4a2a-9613-af998d86d8d7",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        260
+      ],
+      "id": "bcb84e63-32f9-4f97-88fb-f9296d1b204c",
+      "name": "Format json9"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1160,
+        220
+      ],
+      "id": "a331886a-f8cc-4fba-bba0-7532d82397ae",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        220
+      ],
+      "id": "63589e9c-b2e3-460e-b128-82428a899e97",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        1600
+      ],
+      "id": "786d6079-5f16-47da-a1d6-52df48ee5f69",
+      "name": "AI Agent6"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        1820
+      ],
+      "id": "3290b94d-c7b5-46a8-b1e3-b24478f9a9f7",
+      "name": "Google Gemini Chat Model6",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        1700
+      ],
+      "id": "b98a1dc3-8feb-4df7-a6f8-fd3685c6addb",
+      "name": "Format json10"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        1700
+      ],
+      "id": "82720992-4dbd-41e1-b41f-59ebc0b90d31",
+      "name": "Format json11"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[4].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        1700
+      ],
+      "id": "2f64cad0-8cc5-4c0a-8d24-d6c9a0433b77",
+      "name": "GET VIDEo5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        2000
+      ],
+      "id": "bfd1df17-47dc-4a81-b2a0-5b5b7ff39e7c",
+      "name": "AI Agent7"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        2220
+      ],
+      "id": "d1623026-3370-43ba-bd49-08084856b452",
+      "name": "Google Gemini Chat Model7",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        2100
+      ],
+      "id": "c998fe68-36e3-44ac-b034-6f9e2c27087f",
+      "name": "Format json12"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        2100
+      ],
+      "id": "db04b745-e070-47c6-ba8f-e7724bd294bd",
+      "name": "Format json13"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[5].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        2100
+      ],
+      "id": "bccfd727-f4f4-4d7c-972f-6860e00aea80",
+      "name": "GET VIDEo6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        2400
+      ],
+      "id": "7c70db92-26c1-452a-b50a-f081894323ce",
+      "name": "AI Agent8"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        2620
+      ],
+      "id": "26e8356d-9bbe-4735-a690-2bf7108870b7",
+      "name": "Google Gemini Chat Model8",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        2500
+      ],
+      "id": "8a2b4b1a-75d4-442d-b168-d5773abb5fe9",
+      "name": "Format json14"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        2500
+      ],
+      "id": "7fcf2e15-91cb-43a2-8e55-86c687b7f462",
+      "name": "Format json15"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[6].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        2500
+      ],
+      "id": "2f9fab85-6930-45f0-bf2a-71f4e1810efa",
+      "name": "GET VIDEo7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        2800
+      ],
+      "id": "a99018af-ee11-4858-b025-b4e49870bc31",
+      "name": "AI Agent9"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        3020
+      ],
+      "id": "281e2fe6-4b03-4127-8590-8016a027b582",
+      "name": "Google Gemini Chat Model9",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        2900
+      ],
+      "id": "d0c180b4-ab4e-4279-8476-d04523fbbefa",
+      "name": "Format json16"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        2900
+      ],
+      "id": "a976eec2-96f1-4293-b314-03e998acf21d",
+      "name": "Format json17"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[7].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        2900
+      ],
+      "id": "0fca86f5-11dc-43f4-8d9e-f4fc1ffcd43a",
+      "name": "GET VIDEo8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        3200
+      ],
+      "id": "ac6ad5d2-d4f9-43df-a051-e56dbda5e39c",
+      "name": "AI Agent10"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        3420
+      ],
+      "id": "49272127-3a67-4ef1-9e56-c514f598fe52",
+      "name": "Google Gemini Chat Model10",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        3300
+      ],
+      "id": "e952ab69-bbeb-4961-9aa4-06107eb4e65d",
+      "name": "Format json18"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        3300
+      ],
+      "id": "05bdea38-67f4-4484-ae95-a8faf3fdaccc",
+      "name": "Format json19"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[8].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        3300
+      ],
+      "id": "9aad7bc1-f763-4277-8dcd-bbce618e4292",
+      "name": "GET VIDEo9"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Đây là phụ đề của một video youtube, hãy đưa ra nhận xét chi tiết nhất về các sản phẩm xuất hiện trong video, không nhận xét về video {{ $json.data[0].title }} này {{ $json.data[0].text }}\nmiêu tả của video: {{ $json.data[0].description }}\nchỉ xuất ra dạng json không bao gồm text khác. \n\nmẫu:\n{\n  summary: //tóm tắt về nội dung\n  comment: // về điểm mạnh, điểm yếu, điểm cần khắc phục,ngoại quan sản phẩm, chất lượng, so sánh với sản phẩm khác trong video nếu có, chất liệu.\n  price: // định dạng số nguyên được nêu trong video\n  currency: //đơn vị tiền tệ, ví dụ như usd, vnd\n// các trường dưới đây định dạng lại theo chuẩn json nhưng trường này xuất ra giữ nguyên giá trị\n  view: {{ $json.data[0].view_count }}\n  comment_count: {{ $json.data[0].comment_count }}\n  title: {{ $json.data[0].title }}\n  channel: {{ $json.data[0].channel }}\n}\nđịnh dạng json theo chuẩn như trên, không thêm các trường json con. Mỗi trường viết liền mạch nhau không xuống hàng",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        3700
+      ],
+      "id": "491d256e-afd2-4a01-a1cb-cbde584ec3d4",
+      "name": "AI Agent11"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        3920
+      ],
+      "id": "a83a2380-e3e6-4a97-bf8f-13d5b7a1af29",
+      "name": "Google Gemini Chat Model11",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BGZjBHOzMHAnSQ1G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy tất cả các item đầu ra từ node Merge\nconst items = $input.all();\n\n// Nếu bạn muốn gộp tất cả dữ liệu vào một object duy nhất với key \"data\"\nconst mergedData = items.map(item => item.json);\n\n// Tạo ra một object duy nhất với key \"data\" chứa mảng các object dữ liệu đã gộp\nreturn [{\n  json: {\n    data: mergedData\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        36,
+        3700
+      ],
+      "id": "1d6c1a16-c134-416d-ae84-b7e5a798844e",
+      "name": "Format json20"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  let outputString = item.json.output;\n\n  // Remove markdown code block (opening and closing)\n  outputString = outputString\n    .replace(/^```json\\s*/, '')         // Remove ```json at the start\n    .replace(/```[\\s\\n]*$/, '')         // Remove closing ``` and any trailing space/newlines\n    .trim();                            // Clean up anything leftover\n\n  try {\n    const parsedOutput = JSON.parse(outputString);\n    return {\n      json: {\n        ...item.json,\n        output: parsedOutput\n      }\n    };\n  } catch (e) {\n    return {\n      json: {\n        error: \"Invalid JSON string\",\n        original: outputString\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        632,
+        3700
+      ],
+      "id": "adfd4781-ca5a-478b-a558-a66320ea8d9a",
+      "name": "Format json21"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsogg4s.webpilot.cc",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"url\": \"https://www.youtube.com/watch?v={{ $json.items[9].id.videoId }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -184,
+        3700
+      ],
+      "id": "5ecd902e-c177-4caf-9b0b-d852b41a9ae0",
+      "name": "GET VIDEo10"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        980,
+        400
+      ],
+      "id": "55b27145-84a4-4aaa-bf5a-00cb58edfa3c",
+      "name": "Merge2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Youtube's Data": {
+      "main": [
+        [
+          {
+            "node": "GET VIDEo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo7",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo8",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo9",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GET VIDEo10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Format json1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo": {
+      "main": [
+        [
+          {
+            "node": "Format json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Format json3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo2": {
+      "main": [
+        [
+          {
+            "node": "Format json2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent3": {
+      "main": [
+        [
+          {
+            "node": "Format json5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json4": {
+      "main": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo3": {
+      "main": [
+        [
+          {
+            "node": "Format json4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "Format json7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json6": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo4": {
+      "main": [
+        [
+          {
+            "node": "Format json6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Format json1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Format json5": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Format json7": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent5": {
+      "main": [
+        [
+          {
+            "node": "Format json8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json8": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Format json9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json9": {
+      "main": [
+        [
+          {
+            "node": "Get Youtube's Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent6": {
+      "main": [
+        [
+          {
+            "node": "Format json11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent6",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json10": {
+      "main": [
+        [
+          {
+            "node": "AI Agent6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo5": {
+      "main": [
+        [
+          {
+            "node": "Format json10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent7": {
+      "main": [
+        [
+          {
+            "node": "Format json13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent7",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json12": {
+      "main": [
+        [
+          {
+            "node": "AI Agent7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo6": {
+      "main": [
+        [
+          {
+            "node": "Format json12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent8": {
+      "main": [
+        [
+          {
+            "node": "Format json15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent8",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json14": {
+      "main": [
+        [
+          {
+            "node": "AI Agent8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo7": {
+      "main": [
+        [
+          {
+            "node": "Format json14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent9": {
+      "main": [
+        [
+          {
+            "node": "Format json17",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent9",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json16": {
+      "main": [
+        [
+          {
+            "node": "AI Agent9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo8": {
+      "main": [
+        [
+          {
+            "node": "Format json16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent10": {
+      "main": [
+        [
+          {
+            "node": "Format json19",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model10": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent10",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json18": {
+      "main": [
+        [
+          {
+            "node": "AI Agent10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo9": {
+      "main": [
+        [
+          {
+            "node": "Format json18",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent11": {
+      "main": [
+        [
+          {
+            "node": "Format json21",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model11": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json20": {
+      "main": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET VIDEo10": {
+      "main": [
+        [
+          {
+            "node": "Format json20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format json11": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Format json13": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Format json15": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Format json17": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Format json19": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Format json21": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0f749751-127b-4508-ab76-9d4f3a833350",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5aa17b3948d4c090157ffa0bd555581ede49a438ddcdafc94e547d4449f4b714"
+  },
+  "id": "ZwToWRuzgilAtpGD",
+  "tags": []
+}
